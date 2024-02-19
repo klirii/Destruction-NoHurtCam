@@ -49,7 +49,7 @@ void CheckLicense() {
 	}
 }
 
-bool isVimeWorld() {
+bool IsVimeWorld() {
 	PROCESSENTRY32 entry;
 	ZeroMemory(&entry, sizeof(PROCESSENTRY32));
 	entry.dwSize = sizeof(PROCESSENTRY32);
@@ -57,8 +57,8 @@ bool isVimeWorld() {
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	if (Process32First(snapshot, &entry) == TRUE)
 		while (Process32Next(snapshot, &entry) == TRUE)
-			if (entry.th32ProcessID == GetCurrentProcessId() && (_stricmp(entry.szExeFile, "VimeWorld.exe") == 0 ||
-				_stricmp(entry.szExeFile, "javaw.exe") == 0))
+			if (entry.th32ProcessID == GetCurrentProcessId() &&
+				(_stricmp(entry.szExeFile, "VimeWorld.exe") == 0 || GetModuleHandleA("Brainstorm64.dll")))
 				return true;
 
 	return false;
@@ -77,7 +77,7 @@ BOOL APIENTRY DllMain(HINSTANCE handle, DWORD reason, LPVOID reserved) {
 				json features = json::parse(client.user.data["features"].dump());
 				if (features.contains("nohurtcam")) {
 					if (features["nohurtcam"].get<int>() > 0) {
-						client.foobar(client.user.name, isVimeWorld() ? ConfigManager::ParseUsername(true) : "undefined", "NoHurtCam", RestAPI::Utils::get_ip());
+						client.foobar(client.user.name, IsVimeWorld() ? ConfigManager::ParseUsername(true) : "undefined", "NoHurtCam", RestAPI::Utils::get_ip());
 
 						HANDLE hCheckLicense = CreateThread(nullptr, NULL, reinterpret_cast<LPTHREAD_START_ROUTINE>(CheckLicense), nullptr, NULL, nullptr);
 						if (!hCheckLicense) return FALSE;
@@ -125,5 +125,6 @@ BOOL APIENTRY DllMain(HINSTANCE handle, DWORD reason, LPVOID reserved) {
 			return DetourTransactionCommit() == NO_ERROR;
 		}
 	}
-	return TRUE;
+
+	return FALSE;
 }
