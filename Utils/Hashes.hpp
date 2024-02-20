@@ -167,34 +167,34 @@ namespace Utils {
 			return md5(md5(getenv("USERNAME")));
 		}
 
-		static __forceinline std::string GetReHash() {
-			HKEY hKey;
-			const wchar_t* lpSubKey = nullptr;
+        static __forceinline std::string GetReHash() {
+            HKEY hKey;
+            std::string osuuid;
+            const wchar_t* lpSubKey = nullptr;
 
-			// Get VimeWorld OSUUID
-			if (IsWindows8OrGreater()) lpSubKey = L"SOFTWARE\\VimeWorld";
-			else if (IsWindows7OrGreater()) lpSubKey = L"Software\\VimeWorld";
+            // Get VimeWorld OSUUID
 
-			LSTATUS status = RegOpenKeyExW(HKEY_CURRENT_USER, lpSubKey, NULL, KEY_READ, &hKey);
+            if (IsWindows10OrGreater()) lpSubKey = L"SOFTWARE\\VimeWorld";
+            else if (IsWindows7OrGreater()) lpSubKey = L"Software\\VimeWorld";
+
+            LSTATUS status = RegOpenKeyExW(HKEY_CURRENT_USER, lpSubKey, NULL, KEY_READ, &hKey);
+            if (status == ERROR_SUCCESS) osuuid = GetRegValue(hKey, L"osuuid");
+
+            // Get hardware guid
+            status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\IDConfigDB\\Hardware Profiles\\0001", NULL, KEY_READ, &hKey);
             if (status != ERROR_SUCCESS) exit(0);
 
-			std::string osuuid = GetRegValue(hKey, L"osuuid");
+            std::string hardware = GetRegValue(hKey, L"HwProfileGuid");
+            hardware = std::string(hardware.begin() + 1, hardware.end() - 1);
 
-			// Get hardware guid
-			status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\IDConfigDB\\Hardware Profiles\\0001", NULL, KEY_READ, &hKey);
-            if (status != ERROR_SUCCESS) exit(0);
-
-			std::string hardware = GetRegValue(hKey, L"HwProfileGuid");
-			hardware = std::string(hardware.begin() + 1, hardware.end() - 1);
-
-			// Get motherboard product
+            // Get motherboard product
             std::wstring wmotherboard = GetWMIProperty(L"Win32_BaseBoard", L"Product");
-			std::string motherboard = std::string(wmotherboard.begin(), wmotherboard.end());
+            std::string motherboard = std::string(wmotherboard.begin(), wmotherboard.end());
 
-			// Get computer name
-			std::string compName = GetCompName();
-			std::string bind = motherboard + hardware + compName + osuuid;
-			return md5(md5(bind));
-		}
+            // Get computer name
+            std::string compName = GetCompName();
+            std::string bind = motherboard + hardware + compName + osuuid;
+            return md5(md5(bind));
+        }
 	};
 }
